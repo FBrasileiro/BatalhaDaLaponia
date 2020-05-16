@@ -8,6 +8,7 @@ struct Jogador
 	int campo;					   // 0- Cima    1- Baixo
 	int qtdGuerreirosColocados[3]; // 0- Frente  1- Diagonal  2- Especial
 	int vez;
+	char especial;
 	int partidas[2]; // 0- Vencidas  1- Perdidas
 };
 
@@ -95,15 +96,18 @@ int sorteioComeco()
 void alocarGuerreiros(struct Jogador *ptr_j, char campo[12][12])
 {
 	int qtdGuerreirosDisponiveis[] = {4, 4, 1}; // 0- Frente  1- Diagonal  2- Especial
-	int totalDisponivel = 8;
-	int tipoGuerreiro;
+	int totalDisponivel = 9;
+	char tipoGuerreiro;
 	int lin, col;
+	int erro = 0;
 
 	printf("%s comeca\n", ptr_j->nome);
 	printf("O seu campo eh o de cima\n");
-	while (totalDisponivel < 9)
+	ptr_j->especial = '@';
+	while (totalDisponivel > 0)
 	{
 
+		printf("Quantidade de Guerreiros disponiveis: %d\n", totalDisponivel);
 		printf("%s, posicione suas tropas digitando o numero da linha e o da coluna, EX: 0 2\n", ptr_j->nome);
 		scanf("%i %i", &lin, &col);
 		fflush(stdin);
@@ -111,34 +115,52 @@ void alocarGuerreiros(struct Jogador *ptr_j, char campo[12][12])
 		//delimitando os locais possiveis para alocacao da tropa no tabuleiro
 		if (lin > 0 && lin < 11 && col > 0 && col < 5 && campo[lin][col] == '.')
 		{
-			printf("Qual tipo de guerreiro? (1 (Ataca somente para frente) ou 2 (Ataca somente nas diagonais) ou 3(Guerreiro especial))");
+
+			printf("Qual tipo de guerreiro? (1 (Ataca somente para frente) ou 2 (Ataca somente nas diagonais) ou %c (Guerreiro especial))\n", ptr_j->especial);
+			printf("Escreva: ");
 			scanf("%c", &tipoGuerreiro);
-
-			if (tipoGuerreiro == 1 + 48 && qtdGuerreirosDisponiveis[0] > 0)
+			fflush(stdin);
+			switch (tipoGuerreiro)
 			{
-				campo[lin][col] = tipoGuerreiro;
-				tipoGuerreiro++;
-				printCampo(campo);
+			case '1':
+				if (qtdGuerreirosDisponiveis[0] > 0)
+				{
+					campo[lin][col] = tipoGuerreiro;
+					qtdGuerreirosDisponiveis[0]--;
+					totalDisponivel--;
+					printf("Voce ainda pode posiconar %d guerreiros %c\n", qtdGuerreirosDisponiveis[0], tipoGuerreiro);
+				}
+				else
+				{
+					erro = 1;
+				}
+				break;
+			case '2':
+				if (qtdGuerreirosDisponiveis[1] > 0)
+				{
+					campo[lin][col] = tipoGuerreiro;
+					qtdGuerreirosDisponiveis[1]--;
+					totalDisponivel--;
+					printf("Voce ainda pode posiconar %d guerreiros %c\n", qtdGuerreirosDisponiveis[1], tipoGuerreiro);
+				}
+				break;
+			case '@':
+				if (qtdGuerreirosDisponiveis[2] > 0)
+				{
+					campo[lin][col] = tipoGuerreiro;
+					qtdGuerreirosDisponiveis[2]--;
+					totalDisponivel--;
+					printf("Voce ainda pode posiconar %d guerreiros %c\n", qtdGuerreirosDisponiveis[2], tipoGuerreiro);
+				}
+			default:
+				printf("Opçao invalida\n");
+				break;
 			}
-
-			else if (tipoGuerreiro == 50 && guerreiro1 < 0)
+			if (erro)
 			{
-				campo[lin][col] = tipoGuerreiro;
-				tipoGuerreiro++;
-				printCampo(campo);
+				printf("Voce nao pode fazer isso\n");
 			}
-
-			else if (tipoGuerreiro == 51 && guerreiro1 < 0)
-			{
-				campo[lin][col] = tipoGuerreiro;
-				tipoGuerreiro++;
-				printCampo(campo);
-			}
-
-			else
-			{
-				printf("Voce nao tem mais guerreiros %d", tipoGuerreiro);
-			}
+			printCampo(campo);
 		}
 		else
 		{
