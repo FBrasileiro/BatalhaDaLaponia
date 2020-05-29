@@ -283,7 +283,7 @@ int main()
 	limparTelaDelay();
 
 	sorteioJogador(ptr_j1, ptr_j2);
-	inicioPartida(ptr_j1, ptr_j2, &campo);
+	inicioPartida(ptr_j1, ptr_j2, campo);
 
 	return 0;
 }
