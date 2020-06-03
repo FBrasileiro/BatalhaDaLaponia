@@ -12,10 +12,12 @@ typedef struct
 	int partidas[2]; // 0- Vencidas  1- Perdidas
 	int selecionado;
 	int totalDisponivel;
+	int guerreirosVivos;
 } Jogador;
 
 // Funcoes
 
+//
 void limparTelaDelay() // Funcao que vai checar o sistema operacional e executar comandos para limpar a tela de acordo com ele e vai dar um delay de 4 segundos
 {
 #if defined(__APPLE__) || defined(__linux__)
@@ -112,6 +114,9 @@ void printCampo(char campo[12][12]) // Funcao que vai printar o campo e numeraç
 	}
 }
 
+// -----------
+
+// Inicio de Jogo
 void getNomeJogador(Jogador *ptr_j1, Jogador *ptr_j2) // Funcao que vai pegar o nome dos jogadores
 {
 
@@ -151,8 +156,8 @@ int alocarGuerreiros(Jogador *ptr_j, char campo[12][12]) // Funcao que vai posic
 
 	printCampo(campo);
 	printf("Quantidade de Guerreiros disponiveis: %d\n", ptr_j->totalDisponivel);
-	printf("%s, posicione suas tropas digitando o numero da linha e o da coluna, EX: 0 2\n", ptr_j->nome);
-	scanf("%i %i", &lin, &col);
+	printf("%s, posicione suas tropas digitando o numero da coluna e o da linha, EX: 0 2\n", ptr_j->nome);
+	scanf("%i %i", &col, &lin);
 	fflush(stdin);
 
 	//delimitando os locais possiveis para alocacao da tropa no tabuleiro
@@ -215,11 +220,13 @@ void inicioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12]) // Vai 
 {
 	// Iniciando variaveis necessarias para o inicio do jogo
 	ptr_j1->totalDisponivel = 9;
+	ptr_j1->guerreirosVivos = 9;
 	ptr_j1->qtdGuerreirosDisponiveis[0] = 4; // Guerreiro tipo 1 - ataque vertical
 	ptr_j1->qtdGuerreirosDisponiveis[1] = 4; // Guerreiro tipo 2 - ataque diagonal
 	ptr_j1->qtdGuerreirosDisponiveis[2] = 1; // Guerreiro especial - ataque especial
 
 	ptr_j2->totalDisponivel = 9;
+	ptr_j2->guerreirosVivos = 9;
 	ptr_j2->qtdGuerreirosDisponiveis[0] = 4; // Guerreiro tipo 1 - ataque vertical
 	ptr_j2->qtdGuerreirosDisponiveis[1] = 4; // Guerreiro tipo 2 - ataque diagonal
 	ptr_j2->qtdGuerreirosDisponiveis[2] = 1; // Guerreiro especial - ataque especial
@@ -276,6 +283,162 @@ void inicioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12]) // Vai 
 	}
 }
 
+// ------------
+// Meio / Fim de jogo
+int checkVencedor(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12])
+{
+	if (ptr_j1->guerreirosVivos > 0 && ptr_j2->guerreirosVivos == 0)
+	{
+		limparTela();
+		printCampo(campo);
+		printf("%s GANHOU!!\n", ptr_j1->nome);
+		return 1;
+	}
+	else if (ptr_j2->guerreirosVivos > 0 && ptr_j2->guerreirosVivos == 0)
+	{
+		limparTela();
+		printCampo(campo);
+		printf("%s GANHOU!!\n", ptr_j2->nome);
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+int movimentoJoao(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int lin, int col)
+{
+	//verificar se a operacao foi efetuada ou ocorreu algum erro e o usuario precisa digitar novamente
+	int direcaoMOV, erro = 0;
+	printf("Cima = 1 \nBaixo = 2 \nEsquerda = 3 \nDireita = 4 \n");
+	scanf("%d", &direcaoMOV);
+
+	if (direcaoMOV == 1 || direcaoMOV == 2 || direcaoMOV == 3 || direcaoMOV == 4)
+	{
+
+		//se a direção for para cima
+		if (direcaoMOV == 1 && campo[lin - 1][col] == '.')
+		{
+			limparTela();
+			campo[lin][col] = '.';
+			campo[lin - 1][col] = tipoGuerreiro;
+		}
+
+		//se a direção for para baixo
+		else if (direcaoMOV == 2 && campo[lin + 1][col] == '.')
+		{
+			limparTela();
+			campo[lin][col] = '.';
+			campo[lin + 1][col] = tipoGuerreiro;
+		}
+
+		//se a direção for para esquerda
+		else if (direcaoMOV == 3 && campo[lin][col - 1] == '.')
+		{
+			limparTela();
+			campo[lin][col] = '.';
+			campo[lin][col - 1] = tipoGuerreiro;
+		}
+
+		//se a direção for para direita
+		else if (direcaoMOV == 4 && campo[lin][col + 1] == '.')
+		{
+			limparTela();
+			campo[lin][col] = '.';
+			campo[lin][col + 1] = tipoGuerreiro;
+		}
+		else
+		{
+			limparTela();
+			printf("Posição não disponível, tente novamente\n");
+			erro = 1;
+		}
+	}
+	else
+	{
+		limparTela();
+		printf("Opçao invalida, tente novamente\n");
+		erro = 1;
+	}
+	return erro;
+}
+
+void menuEscolhaMovAtk(Jogador *ptr_j, char campo[12][12])
+{
+	int opcaoMOVouATAC;
+
+	char tipoGuerreiro;
+	int lin, col;
+
+	printf("Digite as coordenadas do guerreiro que deseja selecionar: ");
+	scanf("%d %d", &col, &lin);
+
+	//nesse if ainda falta verificar se o guerreiro selecionado está no campo dele
+	if (lin > ptr_j->coordMax[0] && lin < ptr_j->coordMax[1] && col > 0 && col < 11)
+	{
+		if (campo[lin][col] == '1' || campo[lin][col] == '2' || campo[lin][col] == ptr_j->especial)
+		{
+
+			tipoGuerreiro = campo[lin][col];
+
+			printf("Para movimentar digite -> 1\nPara atacar digite -> 2\n");
+			printf("Opção: ");
+			scanf("%d", &opcaoMOVouATAC);
+
+			//se a opcao escolhida for movimentar:
+			if (opcaoMOVouATAC == 1)
+			{
+				while (movimentoJoao(ptr_j, campo, tipoGuerreiro, lin, col))
+				{
+				}
+			}
+
+			//se a opcao escolhida for atacar
+			else if (opcaoMOVouATAC == 2)
+			{
+				//algoritmo de ataque vem aqui
+			}
+			else
+			{
+				printf("Comando inválido\n");
+			}
+		}
+		else
+		{
+			printf("Você não possui guerreiros nessa posição");
+		}
+	}
+	else
+	{
+		printf("Voce nao pode selecionar um guerreiro desse campo\n");
+	}
+}
+
+void meioPartida(Jogador *ptr_j1, Jogador ptr_j2, char campo[12][12])
+{
+	while (!checkVencedor(ptr_j1, ptr_j2, campo))
+	{
+		if (ptr_j1->vez) // Se for a vez do Jogador1 jogar vai executar isso
+		{
+
+			while (menuEscolhaMovAtk(ptr_j1, campo)) // O while vai executar a funçao para alocar o guerreiro e vai continuar executando caso seja retornado 1 (erro)
+			{
+			}
+			ptr_j1->vez = 0;
+			ptr_j2->vez = 1; // Seta que eh a vez do jogador2 jogar
+		}
+		if (ptr_j2->vez)
+		{
+			while (menuEscolhaMovAtk(ptr_j2, campo)) // O while vai executar a funçao para alocar o guerreiro e vai continuar executando caso seja retornado 1 (erro)
+			{
+			}
+			ptr_j2->vez = 0;
+			ptr_j1->vez = 1; // Seta que eh a vez do jogador2 jogar
+		}
+	}
+}
+
 // ------------------
 
 int main()
@@ -291,13 +454,24 @@ int main()
 	configCampo(campo);
 	// -------------------------------
 
+	// TODO Felipe: testar a mudança de vez nas jogadas de mov ou atq
+	// Parte de testes de movimento (APAGAR DPS)
+	campo[4][3] = '2';
+	campo[4][4] = '1';
+	campo[9][9] = '1';
+	ptr_j1->coordMax[0] = 0;
+	ptr_j1->coordMax[1] = 5;
 	printCampo(campo);
-	getNomeJogador(ptr_j1, ptr_j2);
+	menuEscolhaMovAtk(ptr_j1, campo);
+	printCampo(campo);
+	menuEscolhaMovAtk(ptr_j1, campo);
+	printCampo(campo);
+	// ---------------------
 
-	limparTelaDelay();
-
-	sorteioJogador(ptr_j1, ptr_j2);
-	inicioPartida(ptr_j1, ptr_j2, campo);
+	// getNomeJogador(ptr_j1, ptr_j2);
+	// limparTelaDelay();
+	// sorteioJogador(ptr_j1, ptr_j2);
+	// inicioPartida(ptr_j1, ptr_j2, campo);
 
 	return 0;
 }
