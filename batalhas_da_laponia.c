@@ -364,23 +364,20 @@ int movimentoJoao(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int li
 	return erro;
 }
 
-void menuEscolhaMovAtk(Jogador *ptr_j, char campo[12][12])
+int menuEscolhaMovAtk(Jogador *ptr_j, char campo[12][12])
 {
 	int opcaoMOVouATAC;
-
 	char tipoGuerreiro;
-	int lin, col;
+	int lin, col, erro = 0;
 
 	printf("Digite as coordenadas do guerreiro que deseja selecionar: ");
 	scanf("%d %d", &col, &lin);
 
-	//nesse if ainda falta verificar se o guerreiro selecionado está no campo dele
+	//checa se o jogador escolheu um lugar no seu proprio campo
 	if (lin > ptr_j->coordMax[0] && lin < ptr_j->coordMax[1] && col > 0 && col < 11)
 	{
-		if (campo[lin][col] == '1' || campo[lin][col] == '2' || campo[lin][col] == ptr_j->especial)
+		if (campo[lin][col] == '1' || campo[lin][col] == '2' || campo[lin][col] == ptr_j->especial) // checa se o jogador escolheu algum guerreiro
 		{
-
-			tipoGuerreiro = campo[lin][col];
 
 			printf("Para movimentar digite -> 1\nPara atacar digite -> 2\n");
 			printf("Opção: ");
@@ -389,6 +386,7 @@ void menuEscolhaMovAtk(Jogador *ptr_j, char campo[12][12])
 			//se a opcao escolhida for movimentar:
 			if (opcaoMOVouATAC == 1)
 			{
+				tipoGuerreiro = campo[lin][col]; // "salva" o guerreiro q estava na posicao original para poder movimentar
 				while (movimentoJoao(ptr_j, campo, tipoGuerreiro, lin, col))
 				{
 				}
@@ -397,32 +395,35 @@ void menuEscolhaMovAtk(Jogador *ptr_j, char campo[12][12])
 			//se a opcao escolhida for atacar
 			else if (opcaoMOVouATAC == 2)
 			{
-				//algoritmo de ataque vem aqui
+				//chama a funçao de ataque
 			}
 			else
 			{
 				printf("Comando inválido\n");
+				erro = 1
 			}
 		}
 		else
 		{
 			printf("Você não possui guerreiros nessa posição");
+			erro = 1
 		}
 	}
 	else
 	{
 		printf("Voce nao pode selecionar um guerreiro desse campo\n");
+		erro = 1
 	}
 }
 
 void meioPartida(Jogador *ptr_j1, Jogador ptr_j2, char campo[12][12])
 {
-	while (!checkVencedor(ptr_j1, ptr_j2, campo))
+	while (!checkVencedor(ptr_j1, ptr_j2, campo)) // Se o valor retornado pela funçao for 1, é pq alguem ganhou, entao sai do while
 	{
 		if (ptr_j1->vez) // Se for a vez do Jogador1 jogar vai executar isso
 		{
 
-			while (menuEscolhaMovAtk(ptr_j1, campo)) // O while vai executar a funçao para alocar o guerreiro e vai continuar executando caso seja retornado 1 (erro)
+			while (menuEscolhaMovAtk(ptr_j1, campo)) // O while vai executar a funçao para mover ou atacar vai continuar executando caso seja retornado 1 (erro)
 			{
 			}
 			ptr_j1->vez = 0;
@@ -430,11 +431,11 @@ void meioPartida(Jogador *ptr_j1, Jogador ptr_j2, char campo[12][12])
 		}
 		if (ptr_j2->vez)
 		{
-			while (menuEscolhaMovAtk(ptr_j2, campo)) // O while vai executar a funçao para alocar o guerreiro e vai continuar executando caso seja retornado 1 (erro)
+			while (menuEscolhaMovAtk(ptr_j2, campo)) // O while vai executar a funçao para mover ou atacar vai continuar executando caso seja retornado 1 (erro)
 			{
 			}
 			ptr_j2->vez = 0;
-			ptr_j1->vez = 1; // Seta que eh a vez do jogador2 jogar
+			ptr_j1->vez = 1; // Seta que eh a vez do jogador1 jogar
 		}
 	}
 }
