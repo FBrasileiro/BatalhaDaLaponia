@@ -23,6 +23,6 @@
 
 ## Partes que Faltam:
 
-1. Movimentação diagonal
+1. Movimentação diagonal e especial
 2. Ataques
 3. Organizar todas as funções no main para fazer o jogo funcionar
