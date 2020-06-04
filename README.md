@@ -20,9 +20,9 @@
 4. Alocação de Guerreiros de forma alternada
 5. Movimentação vertical e horizontal
 6. Checagem de vencedor (Logica feita, mas depende do ataque para poder testar)
+7. Movimentação especial
 
 ## Partes que Faltam:
 
-1. Movimentação diagonal e especial
-2. Ataques
-3. Organizar todas as funções no main para fazer o jogo funcionar
+1. Ataques
+2. Organizar todas as funções no main para fazer o jogo funcionar
