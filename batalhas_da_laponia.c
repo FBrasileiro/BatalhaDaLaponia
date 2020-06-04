@@ -307,13 +307,60 @@ int checkVencedor(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12])
 	}
 }
 
+int movimentoEspecial(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int lin, int col)
+{
+	int lin2, col2, erro = 0;
+	char guerreiroTroca;
+
+	printf("Digite a posicao do guerreiro que voce quer trocar de lugar\n");
+	scanf("%d %d", &col2, &lin2);
+	if (lin > ptr_j->coordMax[0] && lin < ptr_j->coordMax[1] && col > 0 && col < 11) // Checa se o jogador escolheu uma posicao no proprio campo
+	{
+		if (campo[lin2][col2] == '1' || campo[lin2][col2] == '2') // Checa se tem um guerreiro na posicao escolhida
+		{
+			guerreiroTroca = campo[lin2][col2]; // Salva o guerreiro q ta na posicao escolhida dentro da funçao
+			campo[lin2][col2] = tipoGuerreiro;	// Coloca o guerreiro especial na posicao escolhida
+			campo[lin][col] = guerreiroTroca;	// Coloca o guerreiro na posicao que o guerreiro especial estava
+		}
+		else
+		{
+			printCampo(campo);
+			printf("Nao existe guerreiros nessa posicao\n");
+			erro = 1;
+		}
+	}
+	else
+	{
+		printf("Voce nao pode jogar nesse campo\n");
+		erro = 1;
+	}
+	return erro; // Caso tenha algum erro, retorna 1 (Logo, sai da funçao e nao executa td oq estiver abaixo disso)
+}
+
 int movimentoJoao(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int lin, int col)
 {
-	//verificar se a operacao foi efetuada ou ocorreu algum erro e o usuario precisa digitar novamente
 	int direcaoMOV, erro = 0;
-	printf("Cima = 1 \nBaixo = 2 \nEsquerda = 3 \nDireita = 4 \n");
-	scanf("%d", &direcaoMOV);
 
+	// Caso o Guerreiro seja "normal" executa essa parte
+	printf("Cima = 1 \nBaixo = 2 \nEsquerda = 3 \nDireita = 4 \n");
+	if (tipoGuerreiro == ptr_j->especial)
+	{
+		printf("Movimento Especial = 99\n");
+		scanf("%d", &direcaoMOV);
+		if (direcaoMOV == 99)
+		{
+			while (movimentoEspecial(ptr_j, campo, tipoGuerreiro, lin, col))
+			{
+			}
+			return erro;
+		}
+	}
+	else
+	{
+		scanf("%d", &direcaoMOV);
+	}
+
+	//verificar se a operacao foi efetuada ou ocorreu algum erro e o usuario precisa digitar novamente
 	if (direcaoMOV == 1 || direcaoMOV == 2 || direcaoMOV == 3 || direcaoMOV == 4)
 	{
 
@@ -400,23 +447,24 @@ int menuEscolhaMovAtk(Jogador *ptr_j, char campo[12][12])
 			else
 			{
 				printf("Comando inválido\n");
-				erro = 1
+				erro = 1;
 			}
 		}
 		else
 		{
 			printf("Você não possui guerreiros nessa posição");
-			erro = 1
+			erro = 1;
 		}
 	}
 	else
 	{
 		printf("Voce nao pode selecionar um guerreiro desse campo\n");
-		erro = 1
+		erro = 1;
 	}
+	return erro;
 }
 
-void meioPartida(Jogador *ptr_j1, Jogador ptr_j2, char campo[12][12])
+void meioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12])
 {
 	while (!checkVencedor(ptr_j1, ptr_j2, campo)) // Se o valor retornado pela funçao for 1, é pq alguem ganhou, entao sai do while
 	{
@@ -459,9 +507,11 @@ int main()
 	// Parte de testes de movimento (APAGAR DPS)
 	campo[4][3] = '2';
 	campo[4][4] = '1';
+	campo[1][1] = '@';
 	campo[9][9] = '1';
 	ptr_j1->coordMax[0] = 0;
 	ptr_j1->coordMax[1] = 5;
+	ptr_j1->especial = '@';
 	printCampo(campo);
 	menuEscolhaMovAtk(ptr_j1, campo);
 	printCampo(campo);
