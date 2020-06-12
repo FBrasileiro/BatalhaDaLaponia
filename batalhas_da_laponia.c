@@ -13,11 +13,33 @@ typedef struct
 	int selecionado;
 	int totalDisponivel;
 	int guerreirosVivos;
+	int cooldownEspecialMax;
+	int cooldownEspecialAtual;
 } Jogador;
 
 // Funcoes
 
 //
+void delay()
+{
+#if defined(__APPLE__) || defined(__linux__)
+	system("sleep 2");
+
+#elif defined(_WIN32) || defined(_WIN64)
+	system("ping -n 2 127.0.0.1 > NUL");
+#endif
+}
+
+void limparTela() // Funcao que vai checar o sistema operacional e executar comandos para limpar a tela de acordo com ele
+{
+#if defined(__APPLE__) || defined(__linux__)
+	system("clear");
+
+#elif defined(_WIN32) || defined(_WIN64)
+	system("CLS");
+#endif
+}
+
 void limparTelaDelay() // Funcao que vai checar o sistema operacional e executar comandos para limpar a tela de acordo com ele e vai dar um delay de 4 segundos
 {
 #if defined(__APPLE__) || defined(__linux__)
@@ -25,15 +47,6 @@ void limparTelaDelay() // Funcao que vai checar o sistema operacional e executar
 
 #elif defined(_WIN32) || defined(_WIN64)
 	system("ping -n 4 127.0.0.1 > NUL");
-	system("CLS");
-#endif
-}
-void limparTela() // Funcao que vai checar o sistema operacional e executar comandos para limpar a tela de acordo com ele
-{
-#if defined(__APPLE__) || defined(__linux__)
-	system("clear");
-
-#elif defined(_WIN32) || defined(_WIN64)
 	system("CLS");
 #endif
 }
@@ -101,13 +114,20 @@ void configCampo(char campo[12][12]) // Funçao que vai preencher os espaços da
 	}
 }
 
-void printCampo(char campo[12][12]) // Funcao que vai printar o campo e numeraçoes para auxiliar o usuario
+void printCampo(char campo[12][12], int limpar) // Funcao que vai printar o campo e numeraçoes para auxiliar o usuario
 {
 	printf("0 1 2 3 4 5 6 7 8 9 10 11\n-------------------------\n");
 	for (int i = 0; i < 12; i++)
 	{
 		for (int j = 0; j < 12; j++)
 		{
+			if (limpar)
+			{
+				if (campo[i][j] == 'X')
+				{
+					campo[i][j] = '.';
+				}
+			}
 			printf("%c ", campo[i][j]);
 		}
 		printf(" | %i\n", i);
@@ -154,7 +174,7 @@ int alocarGuerreiros(Jogador *ptr_j, char campo[12][12]) // Funcao que vai posic
 	int erro = 0;
 	int lin, col;
 
-	printCampo(campo);
+	printCampo(campo, 1);
 	printf("Quantidade de Guerreiros disponiveis: %d\n", ptr_j->totalDisponivel);
 	printf("%s, posicione suas tropas digitando o numero da coluna e o da linha, EX: 0 2\n", ptr_j->nome);
 	scanf("%i %i", &col, &lin);
@@ -177,7 +197,7 @@ int alocarGuerreiros(Jogador *ptr_j, char campo[12][12]) // Funcao que vai posic
 			ptr_j->qtdGuerreirosDisponiveis[0]--;
 			ptr_j->totalDisponivel--;
 			limparTela();
-			printCampo(campo);
+			printCampo(campo, 1);
 			printf("Voce ainda pode posiconar %d guerreiros (%c)\n", ptr_j->qtdGuerreirosDisponiveis[0], tipoGuerreiro);
 		}
 		else if (tipoGuerreiro == '2' && ptr_j->qtdGuerreirosDisponiveis[1] > 0) // Se o tipo do guerreiro for igual a '1' e ainda tiver tropas desse tipo disponiveis cai nesse if
@@ -186,7 +206,7 @@ int alocarGuerreiros(Jogador *ptr_j, char campo[12][12]) // Funcao que vai posic
 			ptr_j->qtdGuerreirosDisponiveis[1]--;
 			ptr_j->totalDisponivel--;
 			limparTela();
-			printCampo(campo);
+			printCampo(campo, 1);
 			printf("Voce ainda pode posiconar %d guerreiros (%c)\n", ptr_j->qtdGuerreirosDisponiveis[1], tipoGuerreiro);
 		}
 		else if (tipoGuerreiro == ptr_j->especial && ptr_j->qtdGuerreirosDisponiveis[2] > 0) // Se o tipo do guerreiro for igual ao caractere especial e ainda tiver tropas desse tipo disponiveis cai nesse else if
@@ -195,7 +215,7 @@ int alocarGuerreiros(Jogador *ptr_j, char campo[12][12]) // Funcao que vai posic
 			ptr_j->qtdGuerreirosDisponiveis[2]--;
 			ptr_j->totalDisponivel--;
 			limparTela();
-			printCampo(campo);
+			printCampo(campo, 1);
 			printf("Voce ainda pode posiconar %d guerreiros (%c)\n", ptr_j->qtdGuerreirosDisponiveis[2], tipoGuerreiro);
 		}
 		else // vai cair nesse else caso o usuario digite um guerreiro inexistente ou tente escolher um tipo de guerreiro que ja foi todo posicionado
@@ -238,12 +258,16 @@ void inicioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12]) // Vai 
 		ptr_j2->coordMax[0] = 6;  // Setando as coord maximas da linha que esse usuario vai poder jogar, ou seja, setando o campo
 		ptr_j2->coordMax[1] = 11; // nesse caso vai ser (6, 11), entao o jogador vai poder jogar da linha 7 ate a linha 10, pq 6 é o rio e 11 é a montanha
 		ptr_j2->vez = 0;
+		ptr_j2->cooldownEspecialMax = 4;
+		ptr_j2->cooldownEspecialAtual = 0;
 		printf("%s comeca\n", ptr_j1->nome);
 		printf("O seu campo eh o de cima\n");
 		ptr_j1->especial = '#';	 // Setando o caractere do guerreiro especial do campo de cima
 		ptr_j1->coordMax[0] = 0; // Setando as coord maximas da linha que esse usuario vai poder jogar, ou seja, setando o campo
 		ptr_j1->coordMax[1] = 5; // nesse caso vai ser (0, 5), entao o jogador vai poder jogar da linha 1 ate a linha 4, pq 0 é a montanha e 5 é rio
 		ptr_j1->vez = 1;		 // Se o jogador1 for selecionado pelo sorteio, ele vai começar o jogo
+		ptr_j1->cooldownEspecialMax = 3;
+		ptr_j1->cooldownEspecialAtual = 0;
 	}
 	else
 	{
@@ -253,12 +277,16 @@ void inicioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12]) // Vai 
 		ptr_j1->coordMax[0] = 6;
 		ptr_j1->coordMax[1] = 11;
 		ptr_j1->vez = 0;
+		ptr_j1->cooldownEspecialMax = 4;
+		ptr_j1->cooldownEspecialAtual = 0;
 		printf("%s comeca\n", ptr_j2->nome);
 		printf("O seu campo eh o de cima\n");
 		ptr_j2->especial = '#';
 		ptr_j2->coordMax[0] = 0;
 		ptr_j2->coordMax[1] = 5;
 		ptr_j2->vez = 1; // Se o jogador2 for selecionado pelo sorteio, ele vai começar o jogo
+		ptr_j2->cooldownEspecialMax = 3;
+		ptr_j2->cooldownEspecialAtual = 0;
 	}
 	// --------------------------
 	while (ptr_j1->totalDisponivel > 0 || ptr_j2->totalDisponivel > 0) // Enquanto os jogadores ainda tiverem guerreiros a serem colocados, ficara nesse loop
@@ -290,14 +318,14 @@ int checkVencedor(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12])
 	if (ptr_j1->guerreirosVivos > 0 && ptr_j2->guerreirosVivos == 0)
 	{
 		limparTela();
-		printCampo(campo);
+		printCampo(campo, 1);
 		printf("%s GANHOU!!\n", ptr_j1->nome);
 		return 1;
 	}
 	else if (ptr_j2->guerreirosVivos > 0 && ptr_j2->guerreirosVivos == 0)
 	{
 		limparTela();
-		printCampo(campo);
+		printCampo(campo, 1);
 		printf("%s GANHOU!!\n", ptr_j2->nome);
 		return 1;
 	}
@@ -321,10 +349,11 @@ int movimentoEspecial(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, in
 			guerreiroTroca = campo[lin2][col2]; // Salva o guerreiro q ta na posicao escolhida dentro da funçao
 			campo[lin2][col2] = tipoGuerreiro;	// Coloca o guerreiro especial na posicao escolhida
 			campo[lin][col] = guerreiroTroca;	// Coloca o guerreiro na posicao que o guerreiro especial estava
+			printCampo(campo, 1);
 		}
 		else
 		{
-			printCampo(campo);
+			printCampo(campo, 1);
 			printf("Nao existe guerreiros nessa posicao\n");
 			erro = 1;
 		}
@@ -411,11 +440,328 @@ int movimentoJoao(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int li
 	return erro;
 }
 
+int ataqueVertical(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int lin, int col)
+{
+	int erro = 0, atacou;
+	if (lin > ptr_j->coordMax[0] && lin < ptr_j->coordMax[1])
+	{
+		if (ptr_j->selecionado) // Campo de cima
+		{
+			for (int i = lin + 1; i < 11; i++)
+			{
+				// printf("Ataque passando pela linha: %d", i);
+				if (i <= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
+				{
+					printf("O guerreiro esta sendo bloqueado por outro\n");
+					erro = 1;
+					break;
+				}
+				else if (i >= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
+				{
+					printf("Voce matou um guerreiro do tipo %c\n", campo[i][col]);
+					campo[i][col] = '.';
+					atacou = 1;
+					break;
+				}
+			}
+			if (!atacou)
+			{
+				printf("Voce nao atacou ninguem\n");
+			}
+		}
+		else
+		{
+			for (int i = lin - 1; i > 1; i--)
+			{
+				// printf("Ataque passando pela linha: %d\n", i);
+				if (i >= ptr_j->coordMax[0] && campo[i][col] != '.' && campo[i][col] != '~')
+				{
+					printf("O guerreiro esta sendo bloqueado por outro\n");
+					erro = 1;
+					break;
+				}
+				else if (i <= ptr_j->coordMax[0] && campo[i][col] != '.' && campo[i][col] != '~')
+				{
+					printf("Voce matou um guerreiro do tipo %c\n", campo[i][col]);
+					campo[i][col] = '.';
+					atacou = 1;
+					break;
+				}
+				else
+				{
+					printf("Voce nao atacou ninguem\n");
+				}
+			}
+			if (!atacou)
+			{
+				printf("Voce nao atacou ninguem\n");
+			}
+		}
+	}
+	else
+	{
+		printf("Voce nao pode jogar nesse campo\n");
+		erro = 1;
+	}
+	return erro;
+}
+
+int ataqueDiagonal(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int lin, int col, int direcao)
+{
+	int erro = 0, atacou = 0, qtd;
+
+	if (ptr_j->selecionado && direcao == 1)
+	{
+		col = col + 1;
+		for (int i = lin + 1; i < 11; i++)
+		{
+
+			// printf("i = %d", i);
+			if (col >= 11)
+			{
+				printf("caiu aq\n");
+				erro = 1;
+				printf("Voce nao atacou ninguem\n");
+				return erro;
+			}
+
+			printf("col = %d ", col);
+
+			printf("O ataque passou por (%d, %d)\n", i, col);
+			if (i <= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
+			{
+				printf("O guerreiro esta sendo bloqueado por outro\n");
+				erro = 1;
+				break;
+			}
+			else if (i >= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
+			{
+				printf("Voce matou um guerreiro do tipo %c\n", campo[i][col]);
+				campo[i][col] = 'X';
+				atacou = 1;
+				break;
+			}
+			col += 1;
+		}
+		if (!atacou)
+		{
+			printf("Voce nao atacou ninguem\n");
+		}
+		else
+		{
+			printCampo(campo, 0);
+			delay();
+		}
+	}
+	else if (ptr_j->selecionado && direcao == 2)
+	{
+		col = col - 1;
+		for (int i = lin + 1; i < 11; i++)
+		{
+
+			// printf("i = %d", i);
+			if (col <= 0)
+			{
+				printf("caiu aq\n");
+				erro = 1;
+				printf("Voce nao atacou ninguem\n");
+				return erro;
+			}
+
+			printf("col = %d ", col);
+
+			printf("O ataque passou por (%d, %d)\n", i, col);
+			if (i <= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
+			{
+				printf("O guerreiro esta sendo bloqueado por outro\n");
+				erro = 1;
+				break;
+			}
+			else if (i >= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
+			{
+				printf("Voce matou um guerreiro do tipo %c\n", campo[i][col]);
+				campo[i][col] = 'X';
+				atacou = 1;
+				break;
+			}
+			col--;
+		}
+		if (!atacou)
+		{
+			printf("Voce nao atacou ninguem\n");
+		}
+		else
+		{
+			printCampo(campo, 0);
+			delay();
+		}
+	}
+
+	//Campo de baixo
+	else if (!ptr_j->selecionado && direcao == 1)
+	{
+		col = col + 1;
+		for (int i = lin - 1; i > 0; i--)
+		{
+
+			// printf("i = %d", i);
+			if (col >= 11)
+			{
+				printf("caiu aq\n");
+				erro = 1;
+				printf("Voce nao atacou ninguem\n");
+				return erro;
+			}
+
+			printf("col = %d ", col);
+
+			printf("O ataque passou por (%d, %d)\n", col, i);
+			if (i >= ptr_j->coordMax[0] && i <= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
+			{
+				printf("O guerreiro esta sendo bloqueado por outro\n");
+				erro = 1;
+				break;
+			}
+			else if (i <= ptr_j->coordMax[0] && campo[i][col] != '.' && campo[i][col] != '~')
+			{
+				printf("Voce matou um guerreiro do tipo %c\n", campo[i][col]);
+				campo[i][col] = 'X';
+				atacou = 1;
+				break;
+			}
+			col++;
+		}
+		if (!atacou)
+		{
+			printf("Voce nao atacou ninguem\n");
+		}
+		else
+		{
+			printCampo(campo, 0);
+			delay();
+		}
+	}
+	else if (!ptr_j->selecionado && direcao == 2)
+	{
+		col = col - 1;
+		for (int i = lin - 1; i > 0; i--)
+		{
+
+			// printf("i = %d", i);
+			if (col <= 0)
+			{
+				printf("caiu aq\n");
+				erro = 1;
+				printf("Voce nao atacou ninguem\n");
+				return erro;
+			}
+
+			printf("col = %d ", col);
+
+			printf("O ataque passou por (%d, %d)\n", col, i);
+			if (i >= ptr_j->coordMax[0] && i <= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
+			{
+				printf("O guerreiro esta sendo bloqueado por outro\n");
+				erro = 1;
+				break;
+			}
+			else if (i <= ptr_j->coordMax[0] && campo[i][col] != '.' && campo[i][col] != '~')
+			{
+				printf("Voce matou um guerreiro do tipo %c\n", campo[i][col]);
+				campo[i][col] = 'X';
+				atacou = 1;
+				break;
+			}
+			col--;
+		}
+		if (!atacou)
+		{
+			printf("Voce nao atacou ninguem\n");
+		}
+		else
+		{
+			printCampo(campo, 0);
+			delay();
+		}
+	}
+	else
+	{
+		erro = 1;
+	}
+	return erro;
+}
+
+int ataqueEspecial(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro)
+{
+	int erro = 0;
+	int lin1, col1, lin2, col2;
+	char guerreiroPos1;
+	if (tipoGuerreiro == '@') // Campo de baixo
+	{
+		printf("Entre a cordenada do inimigo que deseja reposicionar (Formato: x y): ");
+		scanf("%d %d", &col1, &lin1);
+		if (lin1 < ptr_j->coordMax[0] && col1 > 0 && col1 < 11)
+		{
+			printf("%c", campo[lin1][col1]);
+			if (campo[lin1][col1] != '*' && campo[lin1][col1] != '~')
+			{
+				guerreiroPos1 = campo[lin1][col1];
+				do
+				{
+					printf("Escolha a posiçao do 2o guerreiro que voce quer reposicionar (Formato: x y): ");
+					scanf("%d %d", &col2, &lin2);
+					printf("%c", campo[lin2][col2]);
+					if (lin2 < ptr_j->coordMax[0] && col2 > 0 && col2 < 11)
+					{
+						if (campo[lin2][col2] != '*' && campo[lin2][col2] != '~')
+						{
+							campo[lin1][col1] = campo[lin2][col2];
+							campo[lin2][col2] = guerreiroPos1;
+							erro = 0;
+						}
+						else
+						{
+							printf("Voce precisa escolher um guerreiro\n");
+							delay();
+							erro = 1;
+						}
+					}
+					else
+					{
+						printf("Voce nao pode escolher um guerreiro do seu campo\n");
+						delay();
+						erro = 1;
+					}
+				} while (erro);
+			}
+		}
+		else
+		{
+			printf("Voce nao pode escolher um guerreiro do seu campo\n");
+			delay();
+			erro = 1;
+		}
+	}
+	else if (tipoGuerreiro == '#')
+	{
+		printf("Caiu no else if da funcao\n");
+		delay();
+	}
+	else
+	{
+		printf("Caiu no else da funcao\n");
+		delay();
+		erro = 1;
+	}
+	return erro;
+}
+
 int menuEscolhaMovAtk(Jogador *ptr_j, char campo[12][12])
 {
 	int opcaoMOVouATAC;
 	char tipoGuerreiro;
-	int lin, col, erro = 0;
+	int lin, col, erro = 0, direcao;
+	printCampo(campo, 1);
 
 	printf("Digite as coordenadas do guerreiro que deseja selecionar: ");
 	scanf("%d %d", &col, &lin);
@@ -443,6 +789,30 @@ int menuEscolhaMovAtk(Jogador *ptr_j, char campo[12][12])
 			else if (opcaoMOVouATAC == 2)
 			{
 				//chama a funçao de ataque
+				if (campo[lin][col] == '1')
+				{
+					erro = ataqueVertical(ptr_j, campo, tipoGuerreiro, lin, col);
+				}
+				else if (campo[lin][col] == '2')
+				{
+					printf("Para qual direçao vc quer atirar? \nDireita -> 1\nEsquerda -> 2\nOpcao: ");
+					scanf("%d", &direcao);
+					erro = ataqueDiagonal(ptr_j, campo, tipoGuerreiro, lin, col, direcao);
+				}
+				else if (campo[lin][col] == ptr_j->especial)
+				{
+					tipoGuerreiro = campo[lin][col];
+					if (ptr_j->cooldownEspecialAtual)
+					{
+						printf("Voce ainda tem que esperar %d rodadas para poder atacar", ptr_j->cooldownEspecialAtual);
+						delay();
+						erro = 1;
+					}
+					else
+					{
+						erro = ataqueEspecial(ptr_j, campo, tipoGuerreiro);
+					}
+				}
 			}
 			else
 			{
@@ -452,7 +822,7 @@ int menuEscolhaMovAtk(Jogador *ptr_j, char campo[12][12])
 		}
 		else
 		{
-			printf("Você não possui guerreiros nessa posição");
+			printf("Você não possui guerreiros nessa posição\n");
 			erro = 1;
 		}
 	}
@@ -493,36 +863,196 @@ void meioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12])
 int main()
 {
 	// Declaracao de Variaveis
-	char campo[12][12];
+	// char campo[12][12];
 	Jogador j1, j2, *ptr_j1, *ptr_j2;
 	ptr_j1 = &j1; // Criando ponteiro para j1
 	ptr_j2 = &j2; // Criando ponteiro para j2
 	//--------------------------
 
 	// Configurando as posicoes do campo
-	configCampo(campo);
+	// configCampo(campo);
 	// -------------------------------
 
-	// TODO Felipe: testar a mudança de vez nas jogadas de mov ou atq
 	// Parte de testes de movimento (APAGAR DPS)
-	campo[4][3] = '2';
-	campo[4][4] = '1';
-	campo[1][1] = '@';
-	campo[9][9] = '1';
-	ptr_j1->coordMax[0] = 0;
-	ptr_j1->coordMax[1] = 5;
-	ptr_j1->especial = '@';
-	printCampo(campo);
-	menuEscolhaMovAtk(ptr_j1, campo);
-	printCampo(campo);
-	menuEscolhaMovAtk(ptr_j1, campo);
-	printCampo(campo);
+	char campo[12][12] = {
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'2',
+		'.',
+		'.',
+		'#',
+		'.',
+		'.',
+		'.',
+		'.',
+		'1',
+		'.',
+		'*',
+		'*',
+		'.',
+		'.',
+		'1',
+		'.',
+		'2',
+		'.',
+		'.',
+		'1',
+		'.',
+		'.',
+		'*',
+		'*',
+		'.',
+		'.',
+		'2',
+		'.',
+		'.',
+		'.',
+		'.',
+		'.',
+		'.',
+		'.',
+		'*',
+		'*',
+		'.',
+		'.',
+		'.',
+		'.',
+		'.',
+		'.',
+		'1',
+		'.',
+		'.',
+		'2',
+		'*',
+		'*',
+		'~',
+		'~',
+		'~',
+		'~',
+		'~',
+		'~',
+		'~',
+		'~',
+		'~',
+		'~',
+		'*',
+		'*',
+		'~',
+		'~',
+		'~',
+		'~',
+		'~',
+		'~',
+		'~',
+		'~',
+		'~',
+		'~',
+		'*',
+		'*',
+		'2',
+		'.',
+		'.',
+		'.',
+		'.',
+		'.',
+		'2',
+		'.',
+		'.',
+		'.',
+		'*',
+		'*',
+		'.',
+		'.',
+		'2',
+		'2',
+		'.',
+		'.',
+		'.',
+		'.',
+		'1',
+		'.',
+		'*',
+		'*',
+		'.',
+		'.',
+		'.',
+		'.',
+		'1',
+		'.',
+		'.',
+		'1',
+		'.',
+		'.',
+		'*',
+		'*',
+		'@',
+		'1',
+		'.',
+		'.',
+		'.',
+		'.',
+		'.',
+		'.',
+		'.',
+		'.',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+		'*',
+	};
+	// campo[4][3] = '2';
+	// campo[3][4] = '2';
+	// campo[4][4] = '1';
+	// campo[1][1] = '@';
+	// campo[9][10] = '1';
+	// campo[9][4] = '1';
+	// campo[10][4] = '1';
+	// ptr_j1->coordMax[0] = 0;
+	// ptr_j1->coordMax[1] = 5;
+	// ptr_j1->especial = '@';
+	// ptr_j1->selecionado = 1;
+	// scanf("%s", ptr_j1->nome);
+	// ptr_j1->guerreirosVivos = 9;
+	// ptr_j1->vez = 1;
+
+	ptr_j2->coordMax[0] = 6;
+	ptr_j2->coordMax[1] = 11;
+	ptr_j2->selecionado = 0;
+	scanf("%s", ptr_j2->nome);
+	ptr_j2->especial = '@';
+	ptr_j2->guerreirosVivos = 9;
+	ptr_j2->vez = 0;
+	// printCampo(campo, 1);
+	menuEscolhaMovAtk(ptr_j2, campo);
+	// printCampo(campo, 1);
+	// menuEscolhaMovAtk(ptr_j2, campo);
+	// printCampo(campo, 1);
 	// ---------------------
 
 	// getNomeJogador(ptr_j1, ptr_j2);
 	// limparTelaDelay();
 	// sorteioJogador(ptr_j1, ptr_j2);
 	// inicioPartida(ptr_j1, ptr_j2, campo);
-
+	// meioPartida(ptr_j1, ptr_j2, campo);
 	return 0;
 }
