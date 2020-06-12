@@ -21,8 +21,10 @@
 5. Movimentação vertical e horizontal
 6. Checagem de vencedor (Logica feita, mas depende do ataque para poder testar)
 7. Movimentação especial
+8. Ataques Normais
+9. Ataque Especial - Guerreiro #
 
 ## Partes que Faltam:
 
-1. Ataques
+1. Ataque Especial - Guerreiro #
 2. Organizar todas as funções no main para fazer o jogo funcionar
