@@ -24,7 +24,8 @@
 8. Ataques Normais
 9. Ataque Especial - Guerreiro @
 10. Ataque Especial - Guerreiro #
+11. Organizar todas as funções no main para fazer o jogo funcionar
 
 ## Partes que Faltam:
 
-1. Organizar todas as funções no main para fazer o jogo funcionar
+1. Descobrir possiveis bugs e corrigi-los
