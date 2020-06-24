@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <locale.h>
 
 typedef struct
 {
@@ -162,6 +163,18 @@ void sorteioJogador(Jogador *ptr_j1, Jogador *ptr_j2) // Funçao que vai sortear
 	}
 }
 
+void mostrarGuerreirosAlocacao(Jogador *ptr_j)
+{
+	printf("\nQUANTIDADE DE GUERREIROS\n");
+	printf(" ---------------------------\n");
+	printf("| Guerreiro 1        |  %d  |\n", ptr_j->qtdGuerreirosDisponiveis[0]);
+	printf(" ---------------------------\n");
+	printf("| Guerreiro 2        |  %d  |\n", ptr_j->qtdGuerreirosDisponiveis[1]);
+	printf(" ---------------------------\n");
+	printf("| Guerreiro Especial |  %d  |\n", ptr_j->qtdGuerreirosDisponiveis[2]);
+	printf(" ---------------------------\n");
+}
+
 int alocarGuerreiros(Jogador *ptr_j, char campo[12][12]) // Funcao que vai posicionar os guerreiros no campo
 {
 	if (ptr_j->totalDisponivel == 0)
@@ -173,7 +186,16 @@ int alocarGuerreiros(Jogador *ptr_j, char campo[12][12]) // Funcao que vai posic
 	int lin, col;
 
 	printCampo(campo, 1);
-	printf("Quantidade de Guerreiros disponiveis: %d\n", ptr_j->totalDisponivel);
+	mostrarGuerreirosAlocacao(ptr_j);
+	printf("Quantidade de Guerreiros disponíveis: %d\n", ptr_j->totalDisponivel);
+	if (ptr_j->selecionado)
+	{
+		printf("SEU CAMPO É O DE CIMA\n");
+	}
+	else
+	{
+		printf("SEU CAMPO É O DE BAIXO\n");
+	}
 	printf("%s, posicione suas tropas digitando o numero da coluna e o da linha, EX: 0 2\n", ptr_j->nome);
 	scanf("%i %i", &col, &lin);
 	fflush(stdin);
@@ -196,7 +218,7 @@ int alocarGuerreiros(Jogador *ptr_j, char campo[12][12]) // Funcao que vai posic
 			ptr_j->totalDisponivel--;
 			limparTela();
 			printCampo(campo, 1);
-			printf("Voce ainda pode posiconar %d guerreiros (%c)\n", ptr_j->qtdGuerreirosDisponiveis[0], tipoGuerreiro);
+			printf("Você ainda pode posicionar %d guerreiros (%c)\n", ptr_j->qtdGuerreirosDisponiveis[0], tipoGuerreiro);
 		}
 		else if (tipoGuerreiro == '2' && ptr_j->qtdGuerreirosDisponiveis[1] > 0) // Se o tipo do guerreiro for igual a '1' e ainda tiver tropas desse tipo disponiveis cai nesse if
 		{
@@ -205,7 +227,7 @@ int alocarGuerreiros(Jogador *ptr_j, char campo[12][12]) // Funcao que vai posic
 			ptr_j->totalDisponivel--;
 			limparTela();
 			printCampo(campo, 1);
-			printf("Voce ainda pode posiconar %d guerreiros (%c)\n", ptr_j->qtdGuerreirosDisponiveis[1], tipoGuerreiro);
+			printf("Você ainda pode posicionar %d guerreiros (%c)\n", ptr_j->qtdGuerreirosDisponiveis[1], tipoGuerreiro);
 		}
 		else if (tipoGuerreiro == ptr_j->especial && ptr_j->qtdGuerreirosDisponiveis[2] > 0) // Se o tipo do guerreiro for igual ao caractere especial e ainda tiver tropas desse tipo disponiveis cai nesse else if
 		{
@@ -214,19 +236,19 @@ int alocarGuerreiros(Jogador *ptr_j, char campo[12][12]) // Funcao que vai posic
 			ptr_j->totalDisponivel--;
 			limparTela();
 			printCampo(campo, 1);
-			printf("Voce ainda pode posiconar %d guerreiros (%c)\n", ptr_j->qtdGuerreirosDisponiveis[2], tipoGuerreiro);
+			printf("Você ainda pode posicionar %d guerreiros (%c)\n", ptr_j->qtdGuerreirosDisponiveis[2], tipoGuerreiro);
 		}
 		else // vai cair nesse else caso o usuario digite um guerreiro inexistente ou tente escolher um tipo de guerreiro que ja foi todo posicionado
 		{
 			limparTela();
-			printf("Voce nao pode fazer isso\n");
+			printf("Você não pode fazer isso\n");
 			erro = 1;
 		}
 	}
 	else // Vai cair nesse else caso o usuario tenha digitado um valor fora do seu campo ou um valor ja ocupado por uma tropa
 	{
 		limparTela();
-		printf("Posicao invalida, tente novamente.\n");
+		printf("Posição inválida, tente novamente.\n");
 		erro = 1;
 	}
 	limparTelaDelay();
@@ -312,14 +334,14 @@ void inicioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12]) // Vai 
 // Meio / Fim de jogo
 int checkVencedor(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12])
 {
-	if (ptr_j1->guerreirosVivos > 0 && ptr_j2->guerreirosVivos == 0)
+	if (ptr_j2->guerreirosVivos <= 0)
 	{
 		limparTela();
 		printCampo(campo, 1);
 		printf("%s GANHOU!!\n", ptr_j1->nome);
 		return 1;
 	}
-	else if (ptr_j2->guerreirosVivos > 0 && ptr_j2->guerreirosVivos == 0)
+	else if (ptr_j1->guerreirosVivos <= 0)
 	{
 		limparTela();
 		printCampo(campo, 1);
@@ -356,15 +378,15 @@ int movimentoEspecial(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, in
 	int lin2, col2, erro = 0;
 	char guerreiroTroca;
 
-	printf("Digite a posicao do guerreiro que voce quer trocar de lugar\n");
+	printf("Digite a posição do guerreiro que você quer trocar de lugar\n");
 	scanf("%d %d", &col2, &lin2);
-	if (lin > ptr_j->coordMax[0] && lin < ptr_j->coordMax[1] && col > 0 && col < 11) // Checa se o jogador escolheu uma posicao no proprio campo
+	if (lin > ptr_j->coordMax[0] && lin < ptr_j->coordMax[1] && col > 0 && col < 11) // Checa se o jogador escolheu uma posição no proprio campo
 	{
-		if (campo[lin2][col2] == '1' || campo[lin2][col2] == '2') // Checa se tem um guerreiro na posicao escolhida
+		if (campo[lin2][col2] == '1' || campo[lin2][col2] == '2') // Checa se tem um guerreiro na posição escolhida
 		{
-			guerreiroTroca = campo[lin2][col2]; // Salva o guerreiro q ta na posicao escolhida dentro da funçao
-			campo[lin2][col2] = tipoGuerreiro;	// Coloca o guerreiro especial na posicao escolhida
-			campo[lin][col] = guerreiroTroca;	// Coloca o guerreiro na posicao que o guerreiro especial estava
+			guerreiroTroca = campo[lin2][col2]; // Salva o guerreiro q ta na posição escolhida dentro da funçao
+			campo[lin2][col2] = tipoGuerreiro;	// Coloca o guerreiro especial na posição escolhida
+			campo[lin][col] = guerreiroTroca;	// Coloca o guerreiro na posição que o guerreiro especial estáva
 			if (ptr_j->pernaQuebrada[0] == col && ptr_j->pernaQuebrada[1] == lin)
 			{
 				ptr_j->pernaQuebrada[0] = col2;
@@ -376,21 +398,24 @@ int movimentoEspecial(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, in
 				ptr_j->pernaQuebrada[1] = lin;
 			}
 
-			printCampo(campo, 1);
+			// printCampo(campo, 1);
 		}
 		else
 		{
+			limparTela();
 			printCampo(campo, 1);
-			printf("Nao existe guerreiros nessa posicao\n");
+			printf("Não existe guerreiros nessa posição\n");
 			erro = 1;
 		}
 	}
 	else
 	{
-		printf("Voce nao pode jogar nesse campo\n");
+		limparTela();
+		printf("Você não pode jogar nesse campo\n");
 		erro = 1;
 	}
-	return erro; // Caso tenha algum erro, retorna 1 (Logo, sai da funçao e nao executa td oq estiver abaixo disso)
+	limparTela();
+	return erro; // Caso tenha algum erro, retorna 1 (Logo, sai da funçao e não executa td oq estiver abaixo disso)
 }
 
 int movimentoJoao(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int lin, int col)
@@ -461,77 +486,85 @@ int movimentoJoao(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int li
 	else
 	{
 		limparTela();
-		printf("Opçao invalida, tente novamente\n");
+		printf("Opção inválida, tente novamente\n");
 		erro = 1;
 	}
 	return erro;
 }
 
-int ataqueVertical(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int lin, int col)
+int ataqueVertical(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12], char tipoGuerreiro, int lin, int col)
 {
-	int erro = 0, atacou;
+	int erro = 0;
 	if (lin > ptr_j->coordMax[0] && lin < ptr_j->coordMax[1])
 	{
 		if (ptr_j->selecionado) // Campo de cima
 		{
 			for (int i = lin + 1; i < 11; i++)
 			{
-				// printf("Ataque passando pela linha: %d", i);
 				if (i <= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
 				{
-					printf("O guerreiro esta sendo bloqueado por outro\n");
+					limparTela();
+					printf("O guerreiro está sendo bloqueado por outro\n");
+					printf("Você não atacou ninguém\n");
 					erro = 1;
 					break;
 				}
 				else if (i >= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
 				{
-					printf("Voce matou um guerreiro do tipo %c\n", campo[i][col]);
-					campo[i][col] = '.';
-					atacou = 1;
+					limparTela();
+					printf("%s matou um guerreiro do tipo %c\n", ptr_j->nome, campo[i][col]);
+					campo[i][col] = 'X';
+					ptr_j2->guerreirosVivos--;
+					erro = 0;
 					break;
 				}
 			}
-			if (!atacou)
-			{
-				printf("Voce nao atacou ninguem\n");
-			}
+
+			printCampo(campo, 0);
+			delay();
+			limparTela();
 		}
 		else
 		{
-			for (int i = lin - 1; i > 1; i--)
+			for (int i = lin - 1; i > 0; i--)
 			{
 				// printf("Ataque passando pela linha: %d\n", i);
 				if (i >= ptr_j->coordMax[0] && campo[i][col] != '.' && campo[i][col] != '~')
 				{
-					printf("O guerreiro esta sendo bloqueado por outro\n");
+					limparTela();
+					printf("O guerreiro está sendo bloqueado por outro\n");
+					printf("Você não atacou ninguém\n");
 					erro = 1;
 					break;
 				}
 				else if (i <= ptr_j->coordMax[0] && campo[i][col] != '.' && campo[i][col] != '~')
 				{
-					printf("Voce matou um guerreiro do tipo %c\n", campo[i][col]);
-					campo[i][col] = '.';
-					atacou = 1;
+					limparTela();
+					printf("%s matou um guerreiro do tipo %c\n", ptr_j->nome, campo[i][col]);
+					campo[i][col] = 'X';
+					ptr_j2->guerreirosVivos--;
+					erro = 0;
 					break;
 				}
 			}
-			if (!atacou)
-			{
-				printf("Voce nao atacou ninguem\n");
-			}
+
+			printCampo(campo, 0);
+			delay();
+			limparTela();
 		}
 	}
 	else
 	{
-		printf("Voce nao pode jogar nesse campo\n");
+		limparTela();
+		printf("Você não pode jogar nesse campo\n");
 		erro = 1;
 	}
 	return erro;
 }
 
-int ataqueDiagonal(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int lin, int col, int direcao)
+int ataqueDiagonal(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12], char tipoGuerreiro, int lin, int col, int direcao)
 {
-	int erro = 0, atacou = 0, qtd;
+	int erro = 0, qtd;
 
 	if (ptr_j->selecionado && direcao == 1)
 	{
@@ -542,38 +575,33 @@ int ataqueDiagonal(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int l
 			// printf("i = %d", i);
 			if (col >= 11)
 			{
-				erro = 1;
-				printf("Voce nao atacou ninguem\n");
+				limparTela();
+				printf("Você não atacou ninguém\n");
 				return erro;
 			}
 
-			printf("col = %d ", col);
-
-			printf("O ataque passou por (%d, %d)\n", i, col);
 			if (i <= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
 			{
-				printf("O guerreiro esta sendo bloqueado por outro\n");
+				limparTela();
+				printf("O guerreiro está sendo bloqueado por outro\n");
+				printf("Você não atacou ninguém\n");
 				erro = 1;
 				break;
 			}
 			else if (i >= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
 			{
-				printf("Voce matou um guerreiro do tipo %c\n", campo[i][col]);
+				limparTela();
+				printf("%s matou um guerreiro do tipo %c\n", ptr_j->nome, campo[i][col]);
 				campo[i][col] = 'X';
-				atacou = 1;
+				ptr_j2->guerreirosVivos--;
 				break;
 			}
 			col += 1;
 		}
-		if (!atacou)
-		{
-			printf("Voce nao atacou ninguem\n");
-		}
-		else
-		{
-			printCampo(campo, 0);
-			delay();
-		}
+
+		printCampo(campo, 0);
+		delay();
+		limparTela();
 	}
 	else if (ptr_j->selecionado && direcao == 2)
 	{
@@ -581,41 +609,35 @@ int ataqueDiagonal(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int l
 		for (int i = lin + 1; i < 11; i++)
 		{
 
-			// printf("i = %d", i);
 			if (col <= 0)
 			{
-				erro = 1;
-				printf("Voce nao atacou ninguem\n");
+				limparTela();
+				printf("Você não atacou ninguém\n");
 				return erro;
 			}
 
-			printf("col = %d ", col);
-
-			printf("O ataque passou por (%d, %d)\n", i, col);
 			if (i <= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
 			{
-				printf("O guerreiro esta sendo bloqueado por outro\n");
+				limparTela();
+				printf("O guerreiro está sendo bloqueado por outro\n");
+				printf("Você não atacou ninguém\n");
 				erro = 1;
 				break;
 			}
 			else if (i >= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
 			{
-				printf("Voce matou um guerreiro do tipo %c\n", campo[i][col]);
+				limparTela();
+				printf("%s matou um guerreiro do tipo %c\n", ptr_j->nome, campo[i][col]);
 				campo[i][col] = 'X';
-				atacou = 1;
+				ptr_j2->guerreirosVivos--;
 				break;
 			}
 			col--;
 		}
-		if (!atacou)
-		{
-			printf("Voce nao atacou ninguem\n");
-		}
-		else
-		{
-			printCampo(campo, 0);
-			delay();
-		}
+
+		printCampo(campo, 0);
+		delay();
+		limparTela();
 	}
 
 	//Campo de baixo
@@ -625,85 +647,67 @@ int ataqueDiagonal(Jogador *ptr_j, char campo[12][12], char tipoGuerreiro, int l
 		for (int i = lin - 1; i > 0; i--)
 		{
 
-			// printf("i = %d", i);
 			if (col >= 11)
 			{
-				printf("caiu aq\n");
-				erro = 1;
-				printf("Voce nao atacou ninguem\n");
+				limparTela();
+				printf("Você não atacou ninguém\n");
 				return erro;
 			}
-
-			printf("col = %d ", col);
-
-			printf("O ataque passou por (%d, %d)\n", col, i);
 			if (i >= ptr_j->coordMax[0] && i <= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
 			{
-				printf("O guerreiro esta sendo bloqueado por outro\n");
+				limparTela();
+				printf("O guerreiro está sendo bloqueado por outro\n");
+				printf("Você não atacou ninguém\n");
 				erro = 1;
 				break;
 			}
 			else if (i <= ptr_j->coordMax[0] && campo[i][col] != '.' && campo[i][col] != '~')
 			{
-				printf("Voce matou um guerreiro do tipo %c\n", campo[i][col]);
+				printf("%s matou um guerreiro do tipo %c\n", ptr_j->nome, campo[i][col]);
 				campo[i][col] = 'X';
-				atacou = 1;
+				ptr_j2->guerreirosVivos--;
 				break;
 			}
 			col++;
 		}
-		if (!atacou)
-		{
-			printf("Voce nao atacou ninguem\n");
-		}
-		else
-		{
-			printCampo(campo, 0);
-			delay();
-		}
+
+		printCampo(campo, 0);
+		delay();
+		limparTela();
 	}
 	else if (!ptr_j->selecionado && direcao == 2)
 	{
 		col = col - 1;
 		for (int i = lin - 1; i > 0; i--)
 		{
-
-			// printf("i = %d", i);
+			erro = 0;
 			if (col <= 0)
 			{
-				printf("caiu aq\n");
-				erro = 1;
-				printf("Voce nao atacou ninguem\n");
+				limparTela();
+				printf("Você não atacou ninguém\n");
 				return erro;
 			}
-
-			printf("col = %d ", col);
-
-			printf("O ataque passou por (%d, %d)\n", col, i);
 			if (i >= ptr_j->coordMax[0] && i <= ptr_j->coordMax[1] && campo[i][col] != '.' && campo[i][col] != '~')
 			{
-				printf("O guerreiro esta sendo bloqueado por outro\n");
+				limparTela();
+				printf("O guerreiro está sendo bloqueado por outro\n");
+				printf("Você não atacou ninguém\n");
 				erro = 1;
 				break;
 			}
 			else if (i <= ptr_j->coordMax[0] && campo[i][col] != '.' && campo[i][col] != '~')
 			{
-				printf("Voce matou um guerreiro do tipo %c\n", campo[i][col]);
+				limparTela();
+				printf("%s matou um guerreiro do tipo %c\n", ptr_j->nome, campo[i][col]);
 				campo[i][col] = 'X';
-				atacou = 1;
+				ptr_j2->guerreirosVivos--;
 				break;
 			}
 			col--;
 		}
-		if (!atacou)
-		{
-			printf("Voce nao atacou ninguem\n");
-		}
-		else
-		{
-			printCampo(campo, 0);
-			delay();
-		}
+		printCampo(campo, 0);
+		delay();
+		limparTela();
 	}
 	else
 	{
@@ -719,7 +723,7 @@ int ataqueEspecial(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12], char tip
 	char guerreiroPos1;
 	if (tipoGuerreiro == '@') // Campo de baixo
 	{
-		printf("Entre a cordenada do inimigo que deseja reposicionar (Formato: x y): ");
+		printf("Escolha 2 inimigos para que eles troquem, entre si, suas posições. Digite as coordenadas no seguinte formato: x y\nGuerreiro 1: ");
 		scanf("%d %d", &col1, &lin1);
 		if (lin1 < ptr_j->coordMax[0] && col1 > 0 && col1 < 11)
 		{
@@ -728,9 +732,8 @@ int ataqueEspecial(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12], char tip
 				guerreiroPos1 = campo[lin1][col1];
 				do
 				{
-					printf("Escolha a posiçao do 2o guerreiro que voce quer reposicionar (Formato: x y): ");
+					printf("Guerreiro 2: ");
 					scanf("%d %d", &col2, &lin2);
-					printf("%c", campo[lin2][col2]);
 					if (lin2 < ptr_j->coordMax[0] && col2 > 0 && col2 < 11)
 					{
 						if (campo[lin2][col2] != '*' && campo[lin2][col2] != '~')
@@ -739,16 +742,19 @@ int ataqueEspecial(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12], char tip
 							campo[lin2][col2] = guerreiroPos1;
 							erro = 0;
 							ptr_j->cooldownEspecialAtual = ptr_j->cooldownEspecialMax;
+							limparTela();
 						}
 						else
 						{
-							printf("Voce precisa escolher um guerreiro\n");
+							limparTela();
+							printf("Você precisa escolher um guerreiro\n");
 							erro = 1;
 						}
 					}
 					else
 					{
-						printf("Voce nao pode escolher um guerreiro do seu campo\n");
+						limparTela();
+						printf("Você não pode escolher um guerreiro do seu campo\n");
 						erro = 1;
 					}
 				} while (erro);
@@ -756,13 +762,14 @@ int ataqueEspecial(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12], char tip
 		}
 		else
 		{
-			printf("Voce nao pode escolher um guerreiro do seu campo\n");
+			limparTela();
+			printf("Você não pode escolher um guerreiro do seu campo\n");
 			erro = 1;
 		}
 	}
 	else if (tipoGuerreiro == '#') // Campo de cima
 	{
-		printf("Entre a cordenada do inimigo que \"deseja quebrar a perna\" (Formato: x y): ");
+		printf("Entre a cordenada do inimigo que deseja \"quebrar a perna\" (Formato: x y): ");
 		scanf("%d %d", &col1, &lin1);
 		if (lin1 > ptr_j->coordMax[1] && col1 > 0 && col1 < 11)
 		{
@@ -771,24 +778,29 @@ int ataqueEspecial(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12], char tip
 				ptr_j2->pernaQuebrada[0] = col1;
 				ptr_j2->pernaQuebrada[1] = lin1;
 				ptr_j2->pernaQuebradaMax = ptr_j2->pernaQuebradaAtual = 2;
+				limparTela();
 				printf("Guerreiro %c foi paralizado\n", campo[lin1][col1]);
 				ptr_j->cooldownEspecialAtual = ptr_j->cooldownEspecialMax;
 				erro = 0;
+				printCampo(campo, 1);
+				delay();
+				limparTela();
 			}
 			else
 			{
-				printf("Voce precisa escolher um guerreiro\n");
+				limparTela();
+				printf("Você precisa escolher um guerreiro\n");
 				erro = 1;
 			}
 		}
 		else
 		{
-			printf("Voce precisa selecionar seu campo\n");
+			limparTela();
+			printf("Você precisa selecionar um guerreiro no seu campo\n");
 			erro = 1;
 		}
 	}
 
-	delay();
 	return erro;
 }
 
@@ -808,7 +820,8 @@ int menuEscolhaMovAtk(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12])
 	{
 		if (ptr_j->pernaQuebrada[0] == col && ptr_j->pernaQuebrada[1] == lin)
 		{
-			printf("Voce nao pode mover esse guerreiro por %d rodadas\n", ptr_j->pernaQuebradaAtual);
+			limparTela();
+			printf("Você não pode mover esse guerreiro por %d rodadas\n", ptr_j->pernaQuebradaAtual);
 			delay();
 			return 1;
 		}
@@ -821,7 +834,7 @@ int menuEscolhaMovAtk(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12])
 			//se a opcao escolhida for movimentar:
 			if (opcaoMOVouATAC == 1)
 			{
-				tipoGuerreiro = campo[lin][col]; // "salva" o guerreiro q estava na posicao original para poder movimentar
+				tipoGuerreiro = campo[lin][col]; // "salva" o guerreiro q estáva na posição original para poder movimentar
 				while (movimentoJoao(ptr_j, campo, tipoGuerreiro, lin, col))
 				{
 				}
@@ -833,20 +846,22 @@ int menuEscolhaMovAtk(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12])
 				//chama a funçao de ataque
 				if (campo[lin][col] == '1')
 				{
-					erro = ataqueVertical(ptr_j, campo, tipoGuerreiro, lin, col);
+					erro = ataqueVertical(ptr_j, ptr_j2, campo, tipoGuerreiro, lin, col);
 				}
 				else if (campo[lin][col] == '2')
 				{
 					printf("Para qual direçao vc quer atirar? \nDireita -> 1\nEsquerda -> 2\nOpcao: ");
 					scanf("%d", &direcao);
-					erro = ataqueDiagonal(ptr_j, campo, tipoGuerreiro, lin, col, direcao);
+					erro = ataqueDiagonal(ptr_j, ptr_j2, campo, tipoGuerreiro, lin, col, direcao);
+					printf("ERRO: %d", erro);
 				}
 				else if (campo[lin][col] == ptr_j->especial)
 				{
 					tipoGuerreiro = campo[lin][col];
 					if (ptr_j->cooldownEspecialAtual > 0)
 					{
-						printf("Voce ainda tem que esperar %d rodadas para poder atacar\n", ptr_j->cooldownEspecialAtual);
+						limparTela();
+						printf("Você ainda tem que esperar %d rodadas para poder atacar\n", ptr_j->cooldownEspecialAtual);
 						delay();
 						erro = 1;
 					}
@@ -858,6 +873,7 @@ int menuEscolhaMovAtk(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12])
 			}
 			else
 			{
+				limparTela();
 				printf("Comando inválido\n");
 				erro = 1;
 			}
@@ -870,7 +886,8 @@ int menuEscolhaMovAtk(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12])
 	}
 	else
 	{
-		printf("Voce nao pode selecionar um guerreiro desse campo\n");
+		limparTela();
+		printf("Você só pode selecionar um guerreiro que esteja dentro do seu campo\n");
 		erro = 1;
 	}
 	return erro;
@@ -878,11 +895,11 @@ int menuEscolhaMovAtk(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12])
 
 void meioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12])
 {
-	while (!checkVencedor(ptr_j1, ptr_j2, campo)) // Se o valor retornado pela funçao for 1, é pq alguem ganhou, entao sai do while
+	while (1) // Se o valor retornado pela funçao for 1, é pq alguem ganhou, entao sai do while
 	{
 		if (ptr_j1->vez) // Se for a vez do Jogador1 jogar vai executar isso
 		{
-			printf("VEZ DE %s\n", ptr_j1->nome);
+			printf("VEZ DE %s\nVOCÊ POSSUI %d GUERREIROS VIVOS\n", ptr_j1->nome, ptr_j1->guerreirosVivos);
 			while (menuEscolhaMovAtk(ptr_j1, ptr_j2, campo)) // O while vai executar a funçao para mover ou atacar vai continuar executando caso seja retornado 1 (erro)
 			{
 			}
@@ -890,10 +907,15 @@ void meioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12])
 			ptr_j2->vez = 1; // Seta que eh a vez do jogador2 jogar
 			decCooldown(ptr_j1);
 			decPernaQuebrada(ptr_j1);
+			if (ptr_j2->guerreirosVivos <= 0)
+			{
+				printf("%s GANHOU!!!\n", ptr_j1->nome);
+				break;
+			}
 		}
 		if (ptr_j2->vez)
 		{
-			printf("VEZ DE %s\n", ptr_j2->nome);
+			printf("VEZ DE %s\nVOCÊ POSSUI %d GUERREIROS VIVOS\n", ptr_j2->nome, ptr_j2->guerreirosVivos);
 			while (menuEscolhaMovAtk(ptr_j2, ptr_j1, campo)) // O while vai executar a funçao para mover ou atacar vai continuar executando caso seja retornado 1 (erro)
 			{
 			}
@@ -901,6 +923,11 @@ void meioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12])
 			ptr_j1->vez = 1; // Seta que eh a vez do jogador1 jogar
 			decCooldown(ptr_j2);
 			decPernaQuebrada(ptr_j2);
+			if (ptr_j1->guerreirosVivos <= 0)
+			{
+				printf("%s GANHOU!!!\n", ptr_j2->nome);
+				break;
+			}
 		}
 	}
 }
@@ -909,198 +936,47 @@ void meioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12])
 
 int main()
 {
-	// Declaracao de Variaveis
-	char campo[12][12];
-	Jogador j1, j2, *ptr_j1, *ptr_j2;
-	ptr_j1 = &j1; // Criando ponteiro para j1
-	ptr_j2 = &j2; // Criando ponteiro para j2
-	//--------------------------
+	setlocale(LC_ALL, "Portuguese");
 
-	// Configurando as posicoes do campo
-	configCampo(campo);
-	// -------------------------------
+	printLogo();
+	while (1)
+	{
+		// Declaracao de Variaveis
+		char campo[12][12], resposta;
+		Jogador j1, j2, *ptr_j1, *ptr_j2;
+		ptr_j1 = &j1; // Criando ponteiro para j1
+		ptr_j2 = &j2; // Criando ponteiro para j2
+		//--------------------------
+		// Configurando as posicoes do campo
+		configCampo(campo);
+		// -------------------------------
 
-	// Parte de testes de movimento (APAGAR DPS)
-	// char campo[12][12] = {
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'2',
-	// 	'.',
-	// 	'.',
-	// 	'#',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'1',
-	// 	'.',
-	// 	'*',
-	// 	'*',
-	// 	'.',
-	// 	'.',
-	// 	'1',
-	// 	'.',
-	// 	'2',
-	// 	'.',
-	// 	'.',
-	// 	'1',
-	// 	'.',
-	// 	'.',
-	// 	'*',
-	// 	'*',
-	// 	'.',
-	// 	'.',
-	// 	'2',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'*',
-	// 	'*',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'1',
-	// 	'.',
-	// 	'.',
-	// 	'2',
-	// 	'*',
-	// 	'*',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'*',
-	// 	'*',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'~',
-	// 	'*',
-	// 	'*',
-	// 	'2',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'2',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'*',
-	// 	'*',
-	// 	'.',
-	// 	'.',
-	// 	'2',
-	// 	'2',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'1',
-	// 	'.',
-	// 	'*',
-	// 	'*',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'1',
-	// 	'.',
-	// 	'.',
-	// 	'1',
-	// 	'.',
-	// 	'.',
-	// 	'*',
-	// 	'*',
-	// 	'@',
-	// 	'1',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'.',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// 	'*',
-	// };
-	// campo[4][3] = '2';
-	// campo[3][4] = '2';
-	// campo[4][4] = '1';
-	// campo[1][1] = '@';
-	// campo[9][10] = '1';
-	// campo[9][4] = '1';
-	// campo[10][4] = '1';
-	// ptr_j1->coordMax[0] = 0;
-	// ptr_j1->coordMax[1] = 5;
-	// ptr_j1->especial = '#';
-	// ptr_j1->selecionado = 1;
-	// scanf("%s", ptr_j1->nome);
-	// ptr_j1->guerreirosVivos = 9;
-	// ptr_j1->vez = 1;
+		getNomeJogador(ptr_j1, ptr_j2);
+		limparTelaDelay();
+		sorteioJogador(ptr_j1, ptr_j2);
+		inicioPartida(ptr_j1, ptr_j2, campo);
+		meioPartida(ptr_j1, ptr_j2, campo);
+		fflush(stdin);
+		printf("Gostaria de jogar novamente? \nResponda com S para sim e N para não: ");
+		scanf("%c", &resposta);
+		fflush(stdin);
+		if (resposta == 'S')
+		{
+			printf("Começando novo jogo...\n");
+			delay();
+			limparTela();
+		}
+		else if (resposta == 'N')
+		{
+			printf("Saindo do jogo...\n");
+			break;
+		}
+		else
+		{
+			printf("Resposta Inválida, saindo do jogo...\n");
+			break;
+		}
+	}
 
-	// ptr_j2->coordMax[0] = 6;
-	// ptr_j2->coordMax[1] = 11;
-	// ptr_j2->selecionado = 0;
-	// scanf("%s", ptr_j2->nome);
-	// ptr_j2->especial = '@';
-	// ptr_j2->guerreirosVivos = 9;
-	// ptr_j2->vez = 0;
-	// printCampo(campo, 1);
-	// menuEscolhaMovAtk(ptr_j1, ptr_j2, campo);
-	// // printCampo(campo, 1);
-	// menuEscolhaMovAtk(ptr_j2, ptr_j1, campo);
-	// printCampo(campo, 1);
-
-	// ---------------------
-
-	getNomeJogador(ptr_j1, ptr_j2);
-	limparTelaDelay();
-	sorteioJogador(ptr_j1, ptr_j2);
-	inicioPartida(ptr_j1, ptr_j2, campo);
-	meioPartida(ptr_j1, ptr_j2, campo);
 	return 0;
 }
