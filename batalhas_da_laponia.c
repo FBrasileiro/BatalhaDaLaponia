@@ -383,6 +383,11 @@ void decPernaQuebrada(Jogador *ptr_j)
 		{
 			ptr_j->pernaQuebradaAtual--;
 		}
+		if (ptr_j->pernaQuebradaAtual == 0)
+		{
+			ptr_j->pernaQuebrada[0] = 999;
+			ptr_j->pernaQuebrada[1] = 999;
+		}
 	}
 }
 
