@@ -1,3 +1,9 @@
+/* Componentes da Equipe
+Felipe Brasileiro
+João Humberto Braz
+Pedro Caria
+Rui Couro
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -91,27 +97,31 @@ void printLogo() // Funçao que vai printar o Logo do jogo
 	limparTelaDelay();
 }
 
-void configCampo(char campo[12][12]) // Funçao que vai preencher os espaços da matriz com os caracteres do campo
+void configCampo(char campo[12][12], int demo) // Funçao que vai preencher os espaços da matriz com os caracteres do campo
 {
-	for (int i = 0; i < 12; i++)
+
+	if (!demo)
 	{
-		for (int j = 0; j < 12; j++)
+		for (int i = 0; i < 12; i++)
 		{
-			if (i == 0 || i == 11)
+			for (int j = 0; j < 12; j++)
 			{
-				campo[i][j] = '*';
+				if (i == 0 || i == 11)
+				{
+					campo[i][j] = '*';
+				}
+				else if (i == 5 || i == 6)
+				{
+					campo[i][j] = '~';
+				}
+				else
+				{
+					campo[i][j] = '.';
+				}
 			}
-			else if (i == 5 || i == 6)
-			{
-				campo[i][j] = '~';
-			}
-			else
-			{
-				campo[i][j] = '.';
-			}
+			campo[i][0] = '*';
+			campo[i][11] = '*';
 		}
-		campo[i][0] = '*';
-		campo[i][11] = '*';
 	}
 }
 
@@ -256,7 +266,7 @@ int alocarGuerreiros(Jogador *ptr_j, char campo[12][12]) // Funcao que vai posic
 	return erro; // Esse "erro" vai ser o valor retornado pela funçao, podendo ser 1 (caso tenha ocorrido algum erro) ou 0 (sem erros)
 }
 
-void inicioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12]) // Vai atribuir valores as variaveis necessarias para o inicio do jogo e chamar a funcao para alocar os guerreiros
+void inicioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12], int demo) // Vai atribuir valores as variaveis necessarias para o inicio do jogo e chamar a funcao para alocar os guerreiros
 {
 	// Iniciando variaveis necessarias para o inicio do jogo
 	ptr_j1->totalDisponivel = 9;
@@ -309,24 +319,27 @@ void inicioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12]) // Vai 
 		ptr_j2->cooldownEspecialAtual = 0;
 	}
 	// --------------------------
-	while (ptr_j1->totalDisponivel > 0 || ptr_j2->totalDisponivel > 0) // Enquanto os jogadores ainda tiverem guerreiros a serem colocados, ficara nesse loop
+	if (!demo)
 	{
-		if (ptr_j1->vez) // Se for a vez do Jogador1 jogar vai executar isso
+		while (ptr_j1->totalDisponivel > 0 || ptr_j2->totalDisponivel > 0) // Enquanto os jogadores ainda tiverem guerreiros a serem colocados, ficara nesse loop
 		{
+			if (ptr_j1->vez) // Se for a vez do Jogador1 jogar vai executar isso
+			{
 
-			while (alocarGuerreiros(ptr_j1, campo)) // O while vai executar a funçao para alocar o guerreiro e vai continuar executando caso seja retornado 1 (erro)
-			{
+				while (alocarGuerreiros(ptr_j1, campo)) // O while vai executar a funçao para alocar o guerreiro e vai continuar executando caso seja retornado 1 (erro)
+				{
+				}
+				ptr_j1->vez = 0;
+				ptr_j2->vez = 1; // Seta que eh a vez do jogador2 jogar
 			}
-			ptr_j1->vez = 0;
-			ptr_j2->vez = 1; // Seta que eh a vez do jogador2 jogar
-		}
-		if (ptr_j2->vez)
-		{
-			while (alocarGuerreiros(ptr_j2, campo)) // O while vai executar a funçao para alocar o guerreiro e vai continuar executando caso seja retornado 1 (erro)
+			if (ptr_j2->vez)
 			{
+				while (alocarGuerreiros(ptr_j2, campo)) // O while vai executar a funçao para alocar o guerreiro e vai continuar executando caso seja retornado 1 (erro)
+				{
+				}
+				ptr_j2->vez = 0;
+				ptr_j1->vez = 1; // Seta que eh a vez do jogador2 jogar
 			}
-			ptr_j2->vez = 0;
-			ptr_j1->vez = 1; // Seta que eh a vez do jogador2 jogar
 		}
 	}
 }
@@ -663,6 +676,7 @@ int ataqueDiagonal(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12], char tip
 			}
 			else if (i <= ptr_j->coordMax[0] && campo[i][col] != '.' && campo[i][col] != '~')
 			{
+				limparTela();
 				printf("%s matou um guerreiro do tipo %c\n", ptr_j->nome, campo[i][col]);
 				campo[i][col] = 'X';
 				ptr_j2->guerreirosVivos--;
@@ -853,7 +867,7 @@ int menuEscolhaMovAtk(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12])
 					printf("Para qual direçao vc quer atirar? \nDireita -> 1\nEsquerda -> 2\nOpcao: ");
 					scanf("%d", &direcao);
 					erro = ataqueDiagonal(ptr_j, ptr_j2, campo, tipoGuerreiro, lin, col, direcao);
-					printf("ERRO: %d", erro);
+					// printf("ERRO: %d", erro);
 				}
 				else if (campo[lin][col] == ptr_j->especial)
 				{
@@ -942,19 +956,38 @@ int main()
 	while (1)
 	{
 		// Declaracao de Variaveis
-		char campo[12][12], resposta;
+		char resposta;
 		Jogador j1, j2, *ptr_j1, *ptr_j2;
 		ptr_j1 = &j1; // Criando ponteiro para j1
 		ptr_j2 = &j2; // Criando ponteiro para j2
 		//--------------------------
-		// Configurando as posicoes do campo
-		configCampo(campo);
+
+		// !!!! PARA A APRESENTAÇÃO !!!!
+		// Primeiro mostra com alocação ai dps faz isso aq
+		int demo = 0; // Seta pra 1 pra pular a alocacao na hr da apresentaçao
+		// Comentar isso aq
+		char campo[12][12];
+		// E descomentar isso aq (Caso queira pode mudar a posição de algum guerreiro pra flr alguma coisa, sla):
+		// char campo[12][12] = {'*','*','*','*','*','*','*','*','*','*','*','*',
+		// 					  '*','2','.','.','#','.','.','.','.','1','.','*',
+		// 					  '*','.','.','1','.','2','.','.','1','.','.','*',
+		// 					  '*','.','.','2','.','.','.','.','.','.','.','*',
+		// 					  '*','.','.','.','.','.','.','1','.','.','2','*',
+		// 					  '*','~','~','~','~','~','~','~','~','~','~','*',
+		// 					  '*','~','~','~','~','~','~','~','~','~','~','*',
+		// 					  '*','2','.','.','.','.','.','2','.','.','.','*',
+		// 					  '*','.','.','2','2','.','.','.','.','1','.','*',
+		// 					  '*','.','.','.','.','1','.','.','1','.','.','*',
+		// 					  '*','@','1','.','.','.','.','.','.','.','.','*',
+		// 					  '*','*','*','*','*','*','*','*','*','*','*','*',};
+
+		configCampo(campo, demo);
 		// -------------------------------
 
 		getNomeJogador(ptr_j1, ptr_j2);
-		limparTelaDelay();
+		limparTela();
 		sorteioJogador(ptr_j1, ptr_j2);
-		inicioPartida(ptr_j1, ptr_j2, campo);
+		inicioPartida(ptr_j1, ptr_j2, campo, demo);
 		meioPartida(ptr_j1, ptr_j2, campo);
 		fflush(stdin);
 		printf("Gostaria de jogar novamente? \nResponda com S para sim e N para não: ");
