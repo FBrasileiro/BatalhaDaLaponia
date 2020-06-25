@@ -832,13 +832,6 @@ int menuEscolhaMovAtk(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12])
 	//checa se o jogador escolheu um lugar no seu proprio campo
 	if (lin > ptr_j->coordMax[0] && lin < ptr_j->coordMax[1] && col > 0 && col < 11)
 	{
-		if (ptr_j->pernaQuebrada[0] == col && ptr_j->pernaQuebrada[1] == lin)
-		{
-			limparTela();
-			printf("Você não pode mover esse guerreiro por %d rodadas\n", ptr_j->pernaQuebradaAtual);
-			delay();
-			return 1;
-		}
 		if (campo[lin][col] == '1' || campo[lin][col] == '2' || campo[lin][col] == ptr_j->especial) // checa se o jogador escolheu algum guerreiro
 		{
 			printf("Para movimentar digite -> 1\nPara atacar digite -> 2\n");
@@ -848,6 +841,13 @@ int menuEscolhaMovAtk(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12])
 			//se a opcao escolhida for movimentar:
 			if (opcaoMOVouATAC == 1)
 			{
+				if (ptr_j->pernaQuebrada[0] == col && ptr_j->pernaQuebrada[1] == lin)
+				{
+					limparTela();
+					printf("Você não pode mover esse guerreiro por %d rodadas\n", ptr_j->pernaQuebradaAtual);
+					delay();
+					return 1;
+				}
 				tipoGuerreiro = campo[lin][col]; // "salva" o guerreiro q estáva na posição original para poder movimentar
 				while (movimentoJoao(ptr_j, campo, tipoGuerreiro, lin, col))
 				{
