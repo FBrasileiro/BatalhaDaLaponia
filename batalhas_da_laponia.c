@@ -925,7 +925,7 @@ int menuEscolhaMovAtk(Jogador *ptr_j, Jogador *ptr_j2, char campo[12][12])
 
 void meioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12])
 {
-	while (1) // Se o valor retornado pela funçao for 1, é pq alguem ganhou, entao sai do while
+	while (1)
 	{
 		if (ptr_j1->vez) // Se for a vez do Jogador1 jogar vai executar isso
 		{
@@ -1029,7 +1029,7 @@ int main()
 		//                       '*','.','.','.','.','.','.','.','.','.','.','*',
 		//                       '*','.','.','.','.','.','.','.','.','.','.','*',
 		//                       '*','.','.','.','.','.','.','.','.','.','.','*',
-		//                       '*','.','.','.','.','1','1','.','.','.','.','*',
+		//                       '*','.','.','.','.','1','.','.','.','.','.','*',
 		//                       '*','*','*','*','*','*','*','*','*','*','*','*',};
 
 		configCampo(campo, demo);
