@@ -266,17 +266,28 @@ int alocarGuerreiros(Jogador *ptr_j, char campo[12][12]) // Funcao que vai posic
 	return erro; // Esse "erro" vai ser o valor retornado pela funçao, podendo ser 1 (caso tenha ocorrido algum erro) ou 0 (sem erros)
 }
 
-void inicioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12], int demo) // Vai atribuir valores as variaveis necessarias para o inicio do jogo e chamar a funcao para alocar os guerreiros
+void inicioPartida(Jogador *ptr_j1, Jogador *ptr_j2, char campo[12][12], int demo, int final) // Vai atribuir valores as variaveis necessarias para o inicio do jogo e chamar a funcao para alocar os guerreiros
 {
+	if (final)
+	{
+		ptr_j1->guerreirosVivos = 1;
+		ptr_j2->guerreirosVivos = 1;
+		ptr_j1->totalDisponivel = 1;
+		ptr_j2->totalDisponivel = 1;
+	}
+	else
+	{
+		ptr_j1->guerreirosVivos = 9;
+		ptr_j2->guerreirosVivos = 9;
+		ptr_j1->totalDisponivel = 9;
+		ptr_j2->totalDisponivel = 9;
+	}
 	// Iniciando variaveis necessarias para o inicio do jogo
-	ptr_j1->totalDisponivel = 9;
-	ptr_j1->guerreirosVivos = 9;
+
 	ptr_j1->qtdGuerreirosDisponiveis[0] = 4; // Guerreiro tipo 1 - ataque vertical
 	ptr_j1->qtdGuerreirosDisponiveis[1] = 4; // Guerreiro tipo 2 - ataque diagonal
 	ptr_j1->qtdGuerreirosDisponiveis[2] = 1; // Guerreiro especial - ataque especial
 
-	ptr_j2->totalDisponivel = 9;
-	ptr_j2->guerreirosVivos = 9;
 	ptr_j2->qtdGuerreirosDisponiveis[0] = 4; // Guerreiro tipo 1 - ataque vertical
 	ptr_j2->qtdGuerreirosDisponiveis[1] = 4; // Guerreiro tipo 2 - ataque diagonal
 	ptr_j2->qtdGuerreirosDisponiveis[2] = 1; // Guerreiro especial - ataque especial
@@ -1005,6 +1016,7 @@ int main()
 		//                       '*','*','*','*','*','*','*','*','*','*','*','*',};
 
 		// SET FINAL
+		int final = 0; // coloque como 1 pra falar q so tem 1 guerreiro vivo em cada campo
 		// Deixe o demo = 1 e comente os outros campos
 		// Pode mostrar o d cima ganhando ai dps anda pro lado e mostra o d baixo ganhando
 		// char campo[12][12] = {'*','*','*','*','*','*','*','*','*','*','*','*',
@@ -1026,7 +1038,7 @@ int main()
 		getNomeJogador(ptr_j1, ptr_j2);
 		limparTela();
 		sorteioJogador(ptr_j1, ptr_j2);
-		inicioPartida(ptr_j1, ptr_j2, campo, demo);
+		inicioPartida(ptr_j1, ptr_j2, campo, demo, final);
 		meioPartida(ptr_j1, ptr_j2, campo);
 		fflush(stdin);
 		printf("Gostaria de jogar novamente? \nResponda com S para sim e N para não: ");
